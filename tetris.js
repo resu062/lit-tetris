@@ -155,11 +155,11 @@ customElements.define('lit-tetris', class LitTetris extends LitElement {
         return html`
             <div class="panel">
                 <div class="item" align="center" style="font-weight:700;text-decoration:underline;cursor:pointer;color:${this.showShadow ? '' : 'red'}">TETRIS</div>
-                <div class="btn" width="auto" height="32" border="0" @click="${this._play}">Play</div>
-                <div class="btn" width="auto" height="32" border="0" @click="${this.pause}">Pause</div>
-                <div class="btn" width="auto" height="32" border="0" @click="${this._sound}" style="text-decoration: ${this.soundEnabled ? '' : 'line-through'}">Sound</div>
-                <div class="btn" width="auto" height="32" border="0" @click="${this._music}" style="text-decoration: ${this.musicEnabled ? '' : 'line-through'}">Music</div>
-                <div class="btn" width="auto" height="32" border="0" @click="${this._shadow}" style="text-decoration: ${this.showShadow ? '' : 'line-through'}">Shadow</div>
+                <div class="btn" @click="${this._play}">Play</div>
+                <div class="btn" @click="${this.pause}">Pause</div>
+                <div class="btn" @click="${this._sound}" style="text-decoration: ${this.soundEnabled ? '' : 'line-through'}">Sound</div>
+                <div class="btn" @click="${this._music}" style="text-decoration: ${this.musicEnabled ? '' : 'line-through'}">Music</div>
+                <div class="btn" @click="${this._shadow}" style="text-decoration: ${this.showShadow ? '' : 'line-through'}">Shadow</div>
                 <div style="flex:1"></div>
                 <div style="max-height:400px; flex: 10; display: flex;flex-direction: column;cursor:pointer;">
                     <div class="cnts" @mousedown="${(e) => this.down(e, KEY.UP)}" @touchstart="${(e) => this.touch(e, KEY.UP)}">up</div>
@@ -210,11 +210,11 @@ customElements.define('lit-tetris', class LitTetris extends LitElement {
             this.themeMusic.pause();
         }
         if (this.musicEnabled) {
-            //if (!this.themeMusic) {
-            this.themeMusic = new Audio('./music/TetrisTheme.mp3');
-            this.themeMusic.volume = 0.05;
-            this.themeMusic.loop = true;
-            //}
+            if (!this.themeMusic) {
+                this.themeMusic = new Audio('./music/TetrisTheme.mp3');
+                this.themeMusic.volume = 0.05;
+                this.themeMusic.loop = true;
+            }
             this.themeMusic.play();
         }
     }
@@ -246,8 +246,10 @@ customElements.define('lit-tetris', class LitTetris extends LitElement {
         else p = moves[action](this.board.piece);
         if (action === KEY.SPACE) {
             if (this.soundEnabled) {
-                this.linedropeffect = new Audio('./music/drop.mp3');
-                this.linedropeffect.volume = 0.15;
+                if (!this.linedropeffect) {
+                    this.linedropeffect = new Audio('./music/drop.mp3');
+                    this.linedropeffect.volume = 0.15;
+                }
                 this.linedropeffect.play();
             }
             while (this.board.valid(p)) {
@@ -395,15 +397,6 @@ class Board {
         }
         return true;
     }
-    lineClearPlay() {
-        if (this.tet.soundEnabled) {
-            if (!this.linecleareffect) {
-                this.linecleareffect = new Audio('./music/line.wav');
-                this.linecleareffect.volume = 0.15;
-            }
-            this.linecleareffect.play();
-        }
-    }
     clearLines() {
         let lines = 0;
         this.grid.forEach((row, y) => {
@@ -414,7 +407,20 @@ class Board {
             }
         });
         if (lines > 0) {
-            this.lineClearPlay();
+            if (this.tet.soundEnabled) {
+                if (!this.linecleareffect) {
+                    this.linecleareffect = new Audio('./music/line.wav');
+                    this.linecleareffect.volume = 0.25;
+                }
+                this.linecleareffect.play();
+                if (lines === 4) {
+                    if (!this.tetriseffect) {
+                        this.tetriseffect = new Audio('./music/tetris.mp3');
+                        this.tetriseffect.volume = 0.5;
+                    }
+                    this.tetriseffect.play();
+                }
+            }
             this.tet.account.score += this.getLinesClearedPoints(lines);
             this.tet.account.lines += lines;
             if (this.tet.account.lines >= LINES_PER_LEVEL) {
@@ -477,7 +483,7 @@ class Board {
         p.shape.forEach(row => row.reverse());
         return p;
     }
-    getLinesClearedPoints(lines, level) {
+    getLinesClearedPoints(lines) {
         const lineClearPoints =
             lines === 1
                 ? POINTS.SINGLE
