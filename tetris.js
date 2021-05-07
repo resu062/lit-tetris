@@ -118,7 +118,7 @@ customElements.define('lit-tetris', class LitTetris extends LitElement {
                 display: flex;
                 justify-content: space-between;
                 align-items: stretch;
-                background: url('./_back.jpg');
+                background: url('./back.jpg');
                 background-size: cover;
             }
             /* :host::before {
